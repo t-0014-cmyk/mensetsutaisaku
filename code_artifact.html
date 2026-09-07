@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>面接対策・思考深掘りAI</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts Inter & Noto Sans JP -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans JP"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- Top Navigation / Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-2">
+      <div class="flex items-center space-x-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-brand-500/20 shrink-0">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div class="min-w-0">
+          <h1 class="font-bold text-base sm:text-xl text-slate-900 leading-tight truncate">面接対策・思考深掘りAI</h1>
+        </div>
+      </div>
+
+      <!-- Quick Action Toolbar -->
+      <div class="flex items-center space-x-2 shrink-0">
+        <button onclick="copyAllText()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-all flex items-center space-x-1.5 border border-slate-200 whitespace-nowrap">
+          <i class="fa-regular fa-copy text-brand-600"></i>
+          <span>全回答を一括コピー</span>
+        </button>
+        <button onclick="openSummaryModal()" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all flex items-center space-x-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-list-check"></i>
+          <span>完成シート確認</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Body -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+
+    <!-- Target School Info Banner -->
+    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label for="targetSchool" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+          <i class="fa-solid fa-building-columns text-brand-600 mr-1"></i>志望校・志望先名
+        </label>
+        <input type="text" id="targetSchool" oninput="handleSchoolInfoChange()" placeholder="例: 〇〇大学 / 〇〇専門学校 / 〇〇株式会社" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all">
+      </div>
+      <div>
+        <label for="targetDept" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+          <i class="fa-solid fa-book-bookmark text-brand-600 mr-1"></i>学部・学科・コース
+        </label>
+        <input type="text" id="targetDept" oninput="handleSchoolInfoChange()" placeholder="例: 看護学部 看護学科 / 情報工学コース" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all">
+      </div>
+    </div>
+
+    <!-- App Main Split Screen -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left Sidebar: Question List -->
+      <aside class="lg:col-span-4 bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col max-h-[750px]">
+        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-list-ol text-brand-600"></i>
+            <h2 class="font-bold text-sm text-slate-800">質問一覧（全<span id="qTotalCount">14</span>問）</h2>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="openAddQModal()" class="px-2.5 py-1 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center space-x-1">
+              <i class="fa-solid fa-plus text-[10px]"></i>
+              <span>追加</span>
+            </button>
+            <span id="overallProgressText" class="text-xs font-bold px-2 py-0.5 bg-brand-50 text-brand-700 rounded-full border border-brand-200">
+              0 / 14 完了
+            </span>
+          </div>
+        </div>
+
+        <!-- Question Scroll Area -->
+        <div class="p-2 space-y-1 overflow-y-auto flex-1 custom-scrollbar" id="qListContainer">
+          <!-- Dynamically populated questions list -->
+        </div>
+      </aside>
+
+      <!-- Right Main Workspace -->
+      <section class="lg:col-span-8 bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 sm:p-6 space-y-5">
+
+        <!-- Question Header Bar -->
+        <div class="space-y-2 border-b border-slate-100 pb-4">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center space-x-2">
+              <span id="currentQCategory" class="px-2.5 py-0.5 text-xs font-bold text-brand-700 bg-brand-50 border border-brand-200 rounded-md">志望動機</span>
+              <span id="currentQIndexText" class="text-xs font-semibold text-slate-400">Q1 / 14</span>
+            </div>
+            
+            <!-- Question Answer Status Selector -->
+            <div class="flex items-center space-x-2">
+              <label for="qStatusSelect" class="text-xs font-medium text-slate-500">ステータス:</label>
+              <select id="qStatusSelect" onchange="handleStatusChange()" class="bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <option value="未着手">⚪ 未着手</option>
+                <option value="作成中">🟡 作成中</option>
+                <option value="要見直し">🔴 要見直し</option>
+                <option value="完成">🟢 完成</option>
+              </select>
+            </div>
+          </div>
+
+          <h3 id="currentQTitle" class="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+            Q1. 本校（本学）を志望した理由を教えてください。
+          </h3>
+        </div>
+
+        <!-- Guided Steps Tab Navigation -->
+        <div class="flex border-b border-slate-200 space-x-1 sm:space-x-4 overflow-x-auto text-xs sm:text-sm font-semibold">
+          <button id="tabBtn1" onclick="switchTab(1)" class="py-2.5 px-3 border-b-2 border-brand-600 text-brand-600 flex items-center space-x-2 shrink-0 font-bold">
+            <span class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 text-xs flex items-center justify-center font-bold">1</span>
+            <span>💡 思考の深掘り</span>
+          </button>
+          <button id="tabBtn2" onclick="switchTab(2)" class="py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 shrink-0 font-semibold">
+            <span class="w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs flex items-center justify-center font-bold">2</span>
+            <span>✍️ 回答執筆 & AIアドバイス</span>
+          </button>
+          <button id="tabBtn3" onclick="switchTab(3)" class="py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 shrink-0 font-semibold">
+            <span class="w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs flex items-center justify-center font-bold">3</span>
+            <span>🎤 音声・スピーチ練習</span>
+          </button>
+        </div>
+
+        <!-- TAB CONTENT 1: THINKING HINTS & STAR METHOD -->
+        <div id="stepContent1" class="space-y-4">
+          <div class="bg-amber-50/70 border border-amber-200/80 rounded-xl p-4 text-xs sm:text-sm text-amber-900 space-y-2">
+            <div class="font-bold flex items-center text-amber-800">
+              <i class="fa-solid fa-lightbulb text-amber-500 mr-2 text-base"></i>
+              <span>考える際の重要ポイント</span>
+            </div>
+            <p id="currentHint" class="leading-relaxed text-amber-900/90">
+              なぜ他校ではなく「本校」なのか、自分の将来の目標や魅力に感じた点と結びつけて具体的に述べましょう。
+            </p>
+          </div>
+
+          <!-- Thinking Starter Questions -->
+          <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-3">
+            <h4 class="font-bold text-xs sm:text-sm text-slate-700 flex items-center">
+              <i class="fa-solid fa-list-check text-brand-600 mr-2"></i>
+              <span>深掘りチェックリスト（自問自答してみよう）</span>
+            </h4>
+            <ul id="starterQuestionsList" class="space-y-2 text-xs sm:text-sm text-slate-600">
+              <!-- Dynamically inserted starters -->
+            </ul>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button onclick="switchTab(2)" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center space-x-2">
+              <span>回答の執筆に進む</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 2: ANSWER WRITING & AI ADVICE -->
+        <div id="stepContent2" class="hidden space-y-4">
+          <div class="flex justify-between items-center text-xs text-slate-500">
+            <label for="answerInput" class="font-bold text-slate-700">あなたの回答（原稿・下書き）</label>
+            <div class="flex items-center space-x-3">
+              <span class="text-slate-400">話す速度:</span>
+              <select id="speechSpeedSelect" onchange="handleAnswerInput()" class="bg-white border border-slate-200 rounded px-2 py-0.5 text-xs text-slate-700">
+                <option value="300">ゆっくり (300文字/分)</option>
+                <option value="350" selected>標準 (350文字/分)</option>
+                <option value="400">早め (400文字/分)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Answer Textarea -->
+          <textarea id="answerInput" oninput="handleAnswerInput()" placeholder="ここに回答を入力してください...（入力内容はブラウザに自動保存されます）" class="w-full h-48 p-4 border border-slate-300 rounded-xl font-sans text-slate-800 text-sm sm:text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 resize-y shadow-inner"></textarea>
+
+          <!-- Metrics Counter & AI Trigger Button -->
+          <div class="flex flex-wrap items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs sm:text-sm gap-2">
+            <div class="flex items-center space-x-4">
+              <div>
+                <span class="text-slate-500">文字数:</span>
+                <span id="charCount" class="font-bold text-slate-800 ml-1">0</span> <span class="text-xs text-slate-500">文字</span>
+              </div>
+              <div class="h-4 w-px bg-slate-300"></div>
+              <div>
+                <span class="text-slate-500">話し時間目安:</span>
+                <span id="timeEstimate" class="font-bold text-brand-600 ml-1">約 0 秒</span>
+              </div>
+            </div>
+
+            <button onclick="runAIAnalysis()" id="aiAnalyzeBtn" class="px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-xs rounded-lg shadow transition-all flex items-center space-x-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>AIアドバイスを生成</span>
+            </button>
+          </div>
+
+          <!-- Dynamic AI Advice Card -->
+          <div id="aiAdviceCard" class="bg-gradient-to-br from-indigo-50/90 via-purple-50/50 to-slate-50 border border-indigo-200/80 rounded-xl p-4 sm:p-5 space-y-3 shadow-sm transition-all">
+            <div class="flex items-center justify-between border-b border-indigo-100 pb-2.5">
+              <div class="flex items-center space-x-2 text-indigo-900 font-bold text-xs sm:text-sm">
+                <div class="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs shadow-sm">
+                  <i class="fa-solid fa-robot"></i>
+                </div>
+                <span>面接AI思考深掘りアドバイス</span>
+              </div>
+              <span id="aiStatusBadge" class="text-[11px] font-semibold text-slate-500 bg-white px-2.5 py-0.5 rounded-full border border-slate-200">
+                回答を入力して「AIアドバイスを生成」をタップしてください
+              </span>
+            </div>
+
+            <!-- Dynamic Advice Output Content -->
+            <div id="aiAdviceOutput" class="text-xs text-slate-700 leading-relaxed space-y-3">
+              <p class="text-slate-500 italic">
+                回答を入力してボタンを押すと、入力テキストや志望校（志望先）の情報を解析し、親しみやすく具体的な「良かった点」「思考を深める問いかけ」「秒数調整アドバイス」を生成します。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 3: VOICE & SPEECH REHEARSAL -->
+        <div id="stepContent3" class="hidden space-y-4">
+          <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-xs sm:text-sm text-indigo-900 space-y-2">
+            <div class="font-bold flex items-center text-indigo-800">
+              <i class="fa-solid fa-microphone-lines text-indigo-600 mr-2"></i>
+              <span>声に出して話す練習（スピーチタイマー）</span>
+            </div>
+            <p class="text-xs text-indigo-800/80">
+              実際に声に出して話し、目標の時間（目安時間）内に収まるかトレーニングしましょう。自動読み上げ（合成音声）で自分の原稿を聞き返すこともできます。
+            </p>
+          </div>
+
+          <!-- Speech Control Panel -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Text To Speech Controls -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+              <h4 class="font-bold text-xs text-slate-700 flex items-center">
+                <i class="fa-solid fa-volume-high text-brand-600 mr-1.5"></i>
+                <span>回答の自動読み上げ</span>
+              </h4>
+              <div class="flex items-center space-x-2">
+                <button id="ttsPlayBtn" onclick="toggleSpeech()" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center space-x-1.5">
+                  <i class="fa-solid fa-play" id="ttsPlayIcon"></i>
+                  <span id="ttsPlayText">音声再生</span>
+                </button>
+                <button onclick="stopSpeech()" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-all">
+                  停止
+                </button>
+              </div>
+            </div>
+
+            <!-- Stopwatch Timer Controls -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+              <h4 class="font-bold text-xs text-slate-700 flex items-center">
+                <i class="fa-solid fa-stopwatch text-purple-600 mr-1.5"></i>
+                <span>スピーチ計測タイマー</span>
+              </h4>
+              <div class="flex items-center justify-between">
+                <div class="text-2xl font-mono font-bold text-slate-800" id="stopwatchDisplay">
+                  00:00.0
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button id="timerStartBtn" onclick="toggleTimer()" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all">
+                    計測スタート
+                  </button>
+                  <button onclick="resetTimer()" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-all">
+                    リセット
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Buttons Bottom -->
+        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+          <button onclick="prevQ()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all flex items-center space-x-1.5">
+            <i class="fa-solid fa-chevron-left"></i>
+            <span>前の質問</span>
+          </button>
+          <button onclick="nextQ()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg transition-all flex items-center space-x-1.5 shadow-sm">
+            <span>次の質問</span>
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- Complete Summary Modal View -->
+  <div id="summaryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <h3 class="font-bold text-slate-800 text-base sm:text-lg flex items-center">
+          <i class="fa-solid fa-file-lines text-brand-600 mr-2"></i>
+          <span>面接回答シート一覧（印刷・プレビュー）</span>
+        </h3>
+        <button onclick="closeSummaryModal()" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center transition-all">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Printable Area -->
+      <div class="p-6 overflow-y-auto space-y-6 flex-1 text-xs sm:text-sm text-slate-800" id="printableContent">
+        <!-- School Banner -->
+        <div class="border-b-2 border-brand-600 pb-3">
+          <h2 class="text-xl font-bold text-brand-800">面接対策・思考深掘りAI</h2>
+          <div class="mt-2 text-slate-600 flex flex-wrap gap-4 font-semibold">
+            <span>志望校・志望先: <span id="modalTargetSchool" class="text-slate-900 font-bold">未入力</span></span>
+            <span>学部・学科: <span id="modalTargetDept" class="text-slate-900 font-bold">未入力</span></span>
+          </div>
+        </div>
+
+        <!-- Answers List -->
+        <div id="modalAnswersList" class="space-y-6">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+        <button onclick="closeSummaryModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg">
+          閉じる
+        </button>
+        <button onclick="window.print()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center space-x-1.5">
+          <i class="fa-solid fa-print"></i>
+          <span>印刷 / PDF出力</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Question Modal -->
+  <div id="addQModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 text-base flex items-center">
+          <i class="fa-solid fa-circle-plus text-brand-600 mr-2"></i>
+          <span>新しい質問を追加</span>
+        </h3>
+        <button onclick="closeAddQModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-all">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+      <div class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">質問のカテゴリー</label>
+          <select id="newQCategory" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none">
+            <option value="志望動機・キャリア">志望動機・キャリア</option>
+            <option value="自己PR・人物像">自己PR・人物像</option>
+            <option value="高校生活・体験">高校生活・体験</option>
+            <option value="時事・その他">時事・その他</option>
+            <option value="オリジナル質問">オリジナル質問</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">質問タイトル <span class="text-rose-500">*</span></label>
+          <textarea id="newQTitle" rows="3" placeholder="例: あなたがこれまでに最も熱中した探究活動について教えてください。" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none resize-none"></textarea>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">考える際のヒント・アドバイス（任意）</label>
+          <input type="text" id="newQHint" placeholder="例: なぜそのテーマを選んだのか、自分の役割を明確に述べましょう。" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none">
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+        <button onclick="closeAddQModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all">
+          キャンセル
+        </button>
+        <button onclick="saveNewQuestion()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all">
+          追加する
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Question Confirmation Modal -->
+  <div id="deleteQModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 text-center">
+      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto text-xl">
+        <i class="fa-solid fa-trash-can"></i>
+      </div>
+      <div class="space-y-1">
+        <h3 class="font-bold text-slate-900 text-base">質問を削除しますか？</h3>
+        <p class="text-xs text-slate-500 leading-relaxed px-2" id="deleteQTitlePreview">この質問と作成した回答内容は消去されます。</p>
+      </div>
+      <div class="flex justify-center space-x-2 pt-2">
+        <button onclick="closeDeleteQModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all">
+          キャンセル
+        </button>
+        <button onclick="confirmDeleteQ()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all">
+          削除する
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 mt-auto py-4">
+    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 font-medium">
+      © 面接対策・思考深掘りAI App — データはブラウザ内 (localStorage) にのみ保存されます
+    </div>
+  </footer>
+
+  <script>
+    // Default 14 Interview Questions Database
+    const defaultQuestionsList = [
+      { id: "q_1", category: "志望動機・キャリア", title: "本校（本学）を志望した理由を教えてください。", hint: "なぜ他校ではなく「貴校（貴学）」なのか、自分の将来の目標や魅力に感じた点と結びつけて具体的に述べましょう。", starters: ["きっかけとなった出来事や経験は？", "貴校（貴学）ならではの魅力（カリキュラム・施設・ポリシー）は？", "将来のどんな夢につながっていますか？"] },
+      { id: "q_2", category: "志望動機・キャリア", title: "入学後に具体的にどんな学びや研究、実験をしてみたいですか？", hint: "シラバスやアドミッションポリシーを意識し、貴校（貴学）で具体的に取り組みたい授業やテーマを挙げましょう。", starters: ["一番興味のある科目や分野は何ですか？", "その分野でどんな技術や専門知識を身につけたいですか？", "その知識をどのように将来に活かしたいですか？"] },
+      { id: "q_3", category: "志望動機・キャリア", title: "卒業後の具体的なキャリアプラン（5年後・10年後の自分など）・目標を教えてください。", hint: "卒業後に就きたい職業や描く将来像と、貴校（貴学）での学びがどうつながるかをストーリーで語りましょう。", starters: ["将来どんな職業・職種に就きたいですか？", "そこでどんな社会貢献や成果を出したいですか？", "そのために貴校（貴学）での学びがなぜ不可欠ですか？"] },
+      { id: "q_4", category: "自己PR・人物像", title: "あなたの長所を教えてください。", hint: "あなたの強みが発揮された過去の具体的なエピソードと、それが入学後にどう活きるかを伝えましょう。", starters: ["その長所を示すエピソード（高校生活や部活等）は？", "周囲の人から褒められたり評価された体験は？", "入学後の学びやキャンパスライフでどう活かせますか？"] },
+      { id: "q_5", category: "自己PR・人物像", title: "あなたの短所を教えてください。", hint: "単なる欠点で終わらせず、それを自覚して普段どんな工夫や改善の努力をしているかまで述べましょう。", starters: ["短所を自覚した具体的な失敗・困った出来事は？", "それを防ぐために普段心がけているルールや工夫は？", "長所の裏返しとして前向きに言い換えるなら？"] },
+      { id: "q_6", category: "高校生活・体験", title: "高校時代に一番力を入れたこと（部活動・生徒会・資格取得・ボランティアなど）は何ですか？", hint: "取り組みの内容だけでなく、どのような課題に対し「どう考えて行動したか」のプロセスを記述しましょう。", starters: ["直面した壁や難しかった課題は何でしたか？", "自分なりに工夫して行動したポイントは？", "その経験から得た成長や学びは何ですか？"] },
+      { id: "q_7", category: "高校生活・体験", title: "高校生活で最も失敗した体験と、それをどう乗り越えたかを教えてください。", hint: "失敗した事実よりも、「そこから何を学び、どう気持ちや行動を切り替えたか」に焦点を当てましょう。", starters: ["どんな失敗や挫折を経験しましたか？", "その時、どう原因を分析し行動を変えましたか？", "その経験は今のあなたの行動にどう活きていますか？"] },
+      { id: "q_8", category: "高校生活・体験", title: "得意な科目と苦手な科目は何ですか？（苦手科目にどう取り組んでいるかも含めて）", hint: "得意科目の魅力や成果と併せて、苦手科目を克服するために意識している姿勢や勉強法を述べましょう。", starters: ["得意科目が好きな理由や面白さは何ですか？", "苦手科目に対してどのような工夫（ノート法や時間配分）で向き合っていますか？"] },
+      { id: "q_9", category: "時事・その他", title: "最近、最も関心を持ったニュースや話題は何ですか？", hint: "事実の要約にとどまらず、そのニュースに対して「自分自身がどう考えたか」の意見を明確にしましょう。", starters: ["そのニュースを知ったきっかけは何ですか？", "そのニュースのどんな点に興味・問題意識を持ちましたか？", "社会や自分自身はどう関わるべきだと考えますか？"] },
+      { id: "q_10", category: "時事・その他", title: "あなたが希望する分野（例：看護、IT、経済など）で、現在課題となっていることは何だと思いますか？", hint: "志望分野の現状や社会的課題に対する関心の高さと、それに対する自分の見解を整理して伝えましょう。", starters: ["その分野でいま注目されている課題や変化は？", "なぜそれが課題だと感じますか？", "将来その課題にどう向き合っていきたいですか？"] },
+      { id: "q_11", category: "高校生活・体験", title: "入学後、学業以外（サークル、自治会、資格取得、ボランティアなど）で力を入れたいことはありますか？", hint: "学業以外のキャンパスライフを通じて、人間としてどのように成長したいかの意欲を表現しましょう。", starters: ["新たに挑戦したい活動やコミュニティは？", "それを通じてどんな人間性を磨きたいですか？"] },
+      { id: "q_12", category: "自己PR・人物像", title: "最近達成感を感じた出来事は何ですか？", hint: "目標に向けて努力した過程と、達成したことで得られた学びや成長を具体的に述べましょう。", starters: ["設定した目標と、その達成までの期間は？", "途中で諦めそうになった時に支えとなったものは？"] },
+      { id: "q_13", category: "自己PR・人物像", title: "ストレスを感じた時、どのように解消していますか？", hint: "自分の心身の状態を把握し、健康的に気持ちを切り替えるセルフコントロール力があることを伝えましょう。", starters: ["自分なりの健康的な気分転換法は何ですか？", "壁にぶつかった時に感情をコントロールする工夫は？"] },
+      { id: "q_14", category: "志望動機・キャリア", title: "面接の最後に、何か質問（逆質問）や自己PRしたいことはありますか？", hint: "これまでの回答で伝えきれなかった熱意をアピールするか、入学意欲が伝わる前向きな質問を準備しましょう。", starters: ["入学までに準備しておくべき学習アドバイスの質問", "最後に一言、意欲をアピールするフレーズ"] }
+    ];
+
+    let questionsList = [];
+    let currentIndex = 0;
+    let answers = {};
+    let statuses = {};
+    let targetPendingDeleteIndex = null;
+
+    // Timer variables
+    let timerInterval = null;
+    let timerStartTime = 0;
+    let timerElapsedTime = 0;
+    let isTimerRunning = false;
+
+    // Speech synthesis variables
+    let synth = window.speechSynthesis;
+    let isSpeaking = false;
+
+    window.onload = function() {
+      loadData();
+      renderQList();
+      showQuestion(currentIndex);
+      updateOverallProgress();
+    };
+
+    function handleSchoolInfoChange() {
+      saveData();
+    }
+
+    function renderQList() {
+      const container = document.getElementById("qListContainer");
+      container.innerHTML = "";
+
+      document.getElementById("qTotalCount").innerText = questionsList.length;
+
+      if (questionsList.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">質問がありません。「+ 追加」ボタンから新しい質問を作成してください。</div>`;
+        return;
+      }
+
+      questionsList.forEach((q, idx) => {
+        const isCurrent = idx === currentIndex;
+        const answerText = answers[q.id] || "";
+        const status = statuses[q.id] || (answerText ? "作成中" : "未着手");
+
+        let statusBadgeClass = "bg-slate-100 text-slate-500 border-slate-200";
+        let statusDot = "⚪";
+        if (status === "作成中") { statusBadgeClass = "bg-amber-50 text-amber-700 border-amber-200"; statusDot = "🟡"; }
+        else if (status === "要見直し") { statusBadgeClass = "bg-rose-50 text-rose-700 border-rose-200"; statusDot = "🔴"; }
+        else if (status === "完成") { statusBadgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200"; statusDot = "🟢"; }
+
+        const div = document.createElement("div");
+        div.className = `p-3 rounded-xl cursor-pointer transition-all border ${isCurrent ? 'bg-brand-50/80 border-brand-300 shadow-sm' : 'bg-white border-transparent hover:bg-slate-50 hover:border-slate-200'}`;
+        div.onclick = () => selectQuestion(idx);
+
+        div.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-start space-x-2 flex-1 min-w-0">
+              <span class="font-bold text-xs ${isCurrent ? 'text-brand-600' : 'text-slate-400'} shrink-0 mt-0.5">Q${idx + 1}</span>
+              <p class="text-xs font-semibold ${isCurrent ? 'text-brand-900 font-bold' : 'text-slate-700'} line-clamp-2 leading-snug">
+                ${q.title}
+              </p>
+            </div>
+            <div class="flex items-center space-x-1 shrink-0">
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${statusBadgeClass}">
+                ${statusDot} ${status}
+              </span>
+              <button onclick="event.stopPropagation(); openDeleteQModal(${idx})" class="text-slate-300 hover:text-rose-600 p-1 rounded transition-colors" title="この質問を削除">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Modal & Question Management Functions
+    function openAddQModal() {
+      document.getElementById("newQCategory").value = "志望動機・キャリア";
+      document.getElementById("newQTitle").value = "";
+      document.getElementById("newQHint").value = "";
+      document.getElementById("addQModal").classList.remove("hidden");
+    }
+
+    function closeAddQModal() {
+      document.getElementById("addQModal").classList.add("hidden");
+    }
+
+    function saveNewQuestion() {
+      const category = document.getElementById("newQCategory").value;
+      const title = document.getElementById("newQTitle").value.trim();
+      const hint = document.getElementById("newQHint").value.trim();
+
+      if (!title) {
+        showToast("質問タイトルを入力してください", "warning");
+        return;
+      }
+
+      const newQ = {
+        id: "custom_" + Date.now(),
+        category: category,
+        title: title,
+        hint: hint || "自分自身の目標や言葉で具体的に答えましょう。",
+        starters: ["この質問に対するきっかけは？", "具体的な出来事や学びは？"]
+      };
+
+      questionsList.push(newQ);
+      currentIndex = questionsList.length - 1;
+
+      closeAddQModal();
+      renderQList();
+      showQuestion(currentIndex);
+      updateOverallProgress();
+      saveData();
+      showToast("新しい質問を追加しました", "success");
+    }
+
+    function openDeleteQModal(index) {
+      if (questionsList.length <= 1) {
+        showToast("質問は最低1つ必要です。削除できません。", "warning");
+        return;
+      }
+      targetPendingDeleteIndex = index;
+      const q = questionsList[index];
+      document.getElementById("deleteQTitlePreview").innerText = `「Q${index + 1}. ${q.title}」を削除します。この操作は取り消せません。`;
+      document.getElementById("deleteQModal").classList.remove("hidden");
+    }
+
+    function closeDeleteQModal() {
+      targetPendingDeleteIndex = null;
+      document.getElementById("deleteQModal").classList.add("hidden");
+    }
+
+    function confirmDeleteQ() {
+      if (targetPendingDeleteIndex === null || targetPendingDeleteIndex < 0 || targetPendingDeleteIndex >= questionsList.length) {
+        closeDeleteQModal();
+        return;
+      }
+
+      const deletedQ = questionsList[targetPendingDeleteIndex];
+      delete answers[deletedQ.id];
+      delete statuses[deletedQ.id];
+
+      questionsList.splice(targetPendingDeleteIndex, 1);
+
+      if (currentIndex >= questionsList.length) {
+        currentIndex = Math.max(0, questionsList.length - 1);
+      } else if (currentIndex === targetPendingDeleteIndex && currentIndex > 0) {
+        currentIndex--;
+      }
+
+      closeDeleteQModal();
+      renderQList();
+      showQuestion(currentIndex);
+      updateOverallProgress();
+      saveData();
+      showToast("質問を削除しました", "info");
+    }
+
+    function selectQuestion(index) {
+      if (index < 0 || index >= questionsList.length) return;
+      currentIndex = index;
+      renderQList();
+      showQuestion(currentIndex);
+      stopSpeech();
+    }
+
+    function showQuestion(index) {
+      const q = questionsList[index];
+      if (!q) {
+        document.getElementById("currentQTitle").innerText = "質問が登録されていません。";
+        return;
+      }
+
+      document.getElementById("currentQCategory").innerText = q.category || "全般";
+      document.getElementById("currentQIndexText").innerText = `Q${index + 1} / ${questionsList.length}`;
+      document.getElementById("currentQTitle").innerText = q.title;
+      document.getElementById("currentHint").innerText = q.hint || "自分の考えや体験に基づいて記入しましょう。";
+
+      // Render STAR Method checklist
+      const startersList = document.getElementById("starterQuestionsList");
+      startersList.innerHTML = "";
+      if (q.starters && q.starters.length > 0) {
+        q.starters.forEach(s => {
+          const li = document.createElement("li");
+          li.className = "flex items-start space-x-2";
+          li.innerHTML = `<i class="fa-regular fa-square-check text-brand-600 mt-0.5 shrink-0"></i><span>${s}</span>`;
+          startersList.appendChild(li);
+        });
+      } else {
+        startersList.innerHTML = `<li class="text-slate-400">（深掘りヒントはありません）</li>`;
+      }
+
+      // Load Answer Text
+      const currentAnswer = answers[q.id] || "";
+      document.getElementById("answerInput").value = currentAnswer;
+
+      // Status selector
+      const status = statuses[q.id] || (currentAnswer ? "作成中" : "未着手");
+      document.getElementById("qStatusSelect").value = status;
+
+      updateCharCount(currentAnswer);
+
+      // Reset AI advice card view for newly opened question
+      resetAIAdviceOutput();
+    }
+
+    function updateCharCount(text) {
+      const count = text ? text.length : 0;
+      document.getElementById("charCount").innerText = count;
+
+      const speedSelect = document.getElementById("speechSpeedSelect");
+      const speed = speedSelect ? parseInt(speedSelect.value, 10) || 350 : 350;
+      const seconds = Math.round((count / speed) * 60);
+
+      document.getElementById("timeEstimate").innerText = `約 ${seconds} 秒`;
+    }
+
+    function handleAnswerInput() {
+      if (questionsList.length === 0) return;
+      const text = document.getElementById("answerInput").value;
+      const q = questionsList[currentIndex];
+      answers[q.id] = text;
+
+      // Auto update status if currently unstarted
+      if (!statuses[q.id] || statuses[q.id] === "未着手") {
+        if (text.trim().length > 0) {
+          statuses[q.id] = "作成中";
+          document.getElementById("qStatusSelect").value = "作成中";
+        }
+      }
+
+      updateCharCount(text);
+      updateOverallProgress();
+      saveData();
+    }
+
+    function runAIAnalysis() {
+      const q = questionsList[currentIndex];
+      const answerText = document.getElementById("answerInput").value.trim();
+
+      if (!answerText) {
+        showToast("まずは回答を入力してからアドバイスボタンを押してください", "warning");
+        return;
+      }
+
+      const btn = document.getElementById("aiAnalyzeBtn");
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>文脈・構造をディープ分析中...</span>`;
+
+      document.getElementById("aiAdviceOutput").innerHTML = `
+        <div class="flex flex-col items-center justify-center py-8 space-y-3 text-indigo-600">
+          <i class="fa-solid fa-wand-magic-sparkles fa-spin text-2xl"></i>
+          <span class="font-bold text-xs sm:text-sm">回答テキストのキーワード分析＆想定深掘り質問を構成中...</span>
+          <span class="text-[11px] text-slate-400">（志望先・文字数・構成ロジックを解析しています）</span>
+        </div>
+      `;
+
+      setTimeout(() => {
+        generateAIAdvice(q, answerText);
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i><span>AIアドバイスを生成</span>`;
+        showToast("詳細AIアドバイスを生成しました", "success");
+      }, 600);
+    }
+
+    function resetAIAdviceOutput() {
+      document.getElementById("aiStatusBadge").innerText = "回答を入力して「AIアドバイスを生成」をタップしてください";
+      document.getElementById("aiStatusBadge").className = "text-[11px] font-semibold text-slate-500 bg-white px-2.5 py-0.5 rounded-full border border-slate-200";
+      document.getElementById("aiAdviceOutput").innerHTML = `
+        <p class="text-slate-500 italic">
+          回答を入力してボタンを押すと、入力テキストや志望校（志望先）の情報を解析し、親しみやすく具体的な「良かった点」「思考を深める問いかけ」「秒数調整アドバイス」を生成します。
+        </p>
+      `;
+    }
+
+    // Helper: Extract key words/phrases from user's input text
+    function extractTextPhrases(text) {
+      const cleanText = text.replace(/[\n\r\t,、。！!？?]/g, " ");
+      const words = cleanText.split(/\s+/).filter(w => w.length >= 2);
+      
+      // Stopwords to filter out
+      const stopwords = ["です", "ます", "こと", "ため", "自分", "私", "僕", "貴校", "本校", "大学", "専門学校", "高校", "思考", "社会", "経験", "理由", "考え", "思い"];
+      const keyWords = words.filter(w => !stopwords.includes(w));
+      
+      keyWords.sort((a, b) => b.length - a.length);
+      const unique = Array.from(new Set(keyWords));
+      return unique.slice(0, 3);
+    }
+
+    function generateAIAdvice(q, text) {
+      const length = text.length;
+      const rawSchool = document.getElementById("targetSchool").value.trim();
+      const rawDept = document.getElementById("targetDept").value.trim();
+      
+      const schoolName = rawSchool ? rawSchool : "志望校";
+      const deptName = rawDept ? rawDept : "";
+      const fullTargetName = rawSchool ? `${schoolName}${deptName ? ' ' + deptName : ''}` : "志望校";
+
+      const speedSelect = document.getElementById("speechSpeedSelect");
+      const speed = speedSelect ? parseInt(speedSelect.value, 10) || 350 : 350;
+      const seconds = Math.round((length / speed) * 60);
+
+      // Extract key features and keywords
+      const hasNumbers = /[0-9０-９一二三四五六七八九十百千万]/.test(text);
+      const hasConnectives = /(なぜなら|具体的には|例えば|その結果|したがって|特に|きっかけ|実際に)/.test(text);
+      const extractedKeywords = extractTextPhrases(text);
+      const kw1 = extractedKeywords[0] || "あなたの体験";
+      const kw2 = extractedKeywords[1] || "目指す目標";
+      const mainKeywordQuote = extractedKeywords.length > 0 ? `「${extractedKeywords.join('」「')}」` : "ご自身の具体的な想い";
+
+      // --- 1. Top Greeting & Praise Header ---
+      let greetingText = `こんにちは！${fullTargetName}を目指して準備を進めているのですね。`;
+      if (extractedKeywords.length > 0) {
+        greetingText += `${kw1}や${kw2}といった視点を取り入れ、社会や将来を見据えて論理的に整理しようとされている姿勢が素晴らしいです。志望理由や回答の中にあなたの真剣さがしっかり伝わってきます！`;
+      } else {
+        greetingText += `ご自身の言葉でしっかりと意見を伝えようという真剣さが伝わってきます。`;
+      }
+      greetingText += `<br>より説得力を高め、面接官の心に響く回答にするためのアドバイスをまとめました。`;
+
+      // --- 2. 🌟 良かった点 (Bulleted) ---
+      let point1 = "", point2 = "", point3 = "";
+      if (q.category === "志望動機・キャリア") {
+        point1 = `<strong>「学び×将来の目標」の一貫した視点:</strong> 単に「～を学びたい」だけでなく、${mainKeywordQuote}という目標が明確で、${schoolName}で学ぶ意義がダイレクトに伝わります。`;
+        point2 = `<strong>論理的な構成と熱意:</strong> ${hasConnectives ? '接続詞や具体例を交えて論理的に展開されており、' : 'しっかりとした意志を感じる文章で、'}面接官にとっても納得感のある構成になっています。`;
+        point3 = `<strong>将来像の具体性:</strong> 入学後の学びから将来の社会貢献・活躍まで、「出口（将来）」を見据えたストーリーラインが素晴らしいです。`;
+      } else if (q.category === "自己PR・人物像") {
+        point1 = `<strong>独自の強み・人柄の魅力:</strong> ${mainKeywordQuote}という表現を中心に、あなたらしさが伝わる素晴らしいアピールになっています。`;
+        point2 = `<strong>具体的なエピソードの存在:</strong> ${hasNumbers ? '数字や具体的な場面が盛り込まれており、' : '実体験に基づいた言葉選びができており、'}非常に説得力があります。`;
+        point3 = `<strong>自己分析の深さ:</strong> 自分の性格や強みを客観的に捉えられており、成長意欲の高さが好印象を与えます。`;
+      } else {
+        point1 = `<strong>具体性と主体性:</strong> ${mainKeywordQuote}というテーマを通して、あなたが主体的に考えて行動できる人物であることが伝わります。`;
+        point2 = `<strong>学びや気づきの明確さ:</strong> 単なる出来事の報告にとどまらず、そこから何を得たのかまでまとめられています。`;
+        point3 = `<strong>素直なアピール力:</strong> 飾らない自分の体験談として書かれており、面接官が親近感・共感を引き出しやすい文章です。`;
+      }
+
+      // --- 3. 🔍 思考を深めるための問いかけ（志望校の求められる像・特色を踏まえて） ---
+      let question1Title = "", question1Body = "";
+      let question2Title = "", question2Body = "";
+
+      if (q.category === "志望动機・キャリア" || q.category === "志望動機・キャリア") {
+        question1Title = `「なぜ、数ある大学（学校）の中でも『${schoolName}』なのですか？」`;
+        question1Body = `同じ分野を学べる学校は他にもありますが、${schoolName}の「求める学生像（アドミッション・ポリシー）」や「人物教育・少人数教育・独自のカリキュラム」が、あなたの目指す未来にどう結びつくと考えていますか？過去の経験から「なぜ${schoolName}でなければならないのか」を感じたエピソードがあれば、説得力が格段に増します。`;
+
+        question2Title = `「具体的に、どんなテーマや社会課題に興味がありますか？」`;
+        question2Body = `${mainKeywordQuote}という言葉を、あなた自身の言葉で少し具体化してみましょう。例えば「地元の課題解決」なのか「特定の技術・専門分野の探究」なのか。具体的な興味関心が一つ見えるだけで、あなたの「学びへの主体性」がより際立ちます。`;
+      } else if (q.category === "自己PR・人物像") {
+        question1Title = `「その強み（長所）は、${schoolName}での学びやキャンパスライフでどう活かせますか？」`;
+        question1Body = `${schoolName}では主体性や協働して取り組む姿勢が重視されます。「この強み（${kw1}）を活かして、入学後にチームや授業・サークルでどう貢献できるか」という未来の具体的な姿を1文添えてみましょう。`;
+
+        question2Title = `「その強みを裏付ける、一番『苦労したけれど壁を乗り越えた体験』は何ですか？」`;
+        question2Body = `面接官は「本物の強みかどうか」を見極めるためにプロセスの深掘りをします。「壁にぶつかった時、どんな工夫をして乗り越えたか」という具体談を整理しておくと万全です。`;
+      } else {
+        question1Title = `「その経験（${kw1}）を通して、自分自身の中で一番変わった・成長したと感じる部分はどこですか？」`;
+        question1Body = `結果や出来事そのもの以上に、面接官は「あなたの価値観や行動パターンがどう変化したか」に関心を持っています。当時の自分の心情と今の変化を比べて語れるようにしておきましょう。`;
+
+        question2Title = `「その学びを、${schoolName}でのこれからの学びや将来にどう繋げていきたいですか？」`;
+        question2Body = `高校時代の過去の思い出で終わらせず、「だからこそ${schoolName}でさらにこれを伸ばしたい」と未来の話に接続させることで、熱意がより強く伝わります。`;
+      }
+
+      // --- 4. ⏱️ 秒数調整アドバイス（目標: 60秒） ---
+      let timingAdviceTitle = `現在の${length}文字（約${seconds}秒）は、`;
+      let addHint = "", cutHint = "";
+
+      if (length < 200) {
+        timingAdviceTitle += `少しコンパクトな印象です（目標目安: 250～300文字 / 約50～60秒）。`;
+        addHint = `「${schoolName}の〇〇という授業（またはゼミ・特色）」など、具体的なカリキュラム名や具体的なエピソードを1つ加えると、「本当にこの学校に入りたい」という熱意がより強固になります。`;
+        cutHint = `現状で短めのため無理に削る必要はありません。要点をシンプルに保ちつつ具体例を足していきましょう。`;
+      } else if (length > 380) {
+        timingAdviceTitle += `少し長めです（約${seconds}秒）。落ち着いて話すにはもう少し整理すると聞きやすくなります。`;
+        addHint = `重要なキーワード（${mainKeywordQuote}）はすでに揃っているため、内容を追加する必要はありません。`;
+        cutHint = `中盤の前提説明や重複しているフレーズをもう少し簡潔にまとめ、「${schoolName}で何をしたいか」という結論・未来の話に比重を置くと、より引き締まった前向きな印象になります。`;
+      } else {
+        timingAdviceTitle += `面接官が最も聞き取りやすく落ち着いて話せる、非常に理想的なボリュームです！`;
+        addHint = `もし時間にほんの少し余裕があると感じたら、「${schoolName}の〇〇という授業（またはゼミ・特徴）」など、具体的な固有名詞をひとつ入れると熱意がさらに際立ちます。`;
+        cutHint = `現状でも非常にバランスが良いですが、もし本番で緊張して時間が足りなくなりそうな場合は、前置きをシンプルにして「結論」と「自分の思い」を中心に伝えるイメージを持っておくと安心です。`;
+      }
+
+      // Update Badge State
+      const badge = document.getElementById("aiStatusBadge");
+      badge.innerText = "✨ 面接AIアドバイス生成完了";
+      badge.className = "text-[11px] font-bold text-indigo-700 bg-indigo-100 px-2.5 py-0.5 rounded-full border border-indigo-200";
+
+      // Render Dynamic Output HTML in User's Requested Tone
+      let html = `
+        <div class="space-y-4 text-xs sm:text-sm text-slate-800 leading-relaxed font-sans">
+          <!-- Top Greeting -->
+          <div class="bg-white/80 border border-indigo-100 rounded-xl p-3.5 shadow-sm text-slate-800 font-medium">
+            ${greetingText}
+          </div>
+
+          <!-- 🌟 良かった点 -->
+          <div class="bg-amber-50/80 border border-amber-200/80 rounded-xl p-4 space-y-2">
+            <div class="font-bold text-amber-900 text-xs sm:text-sm flex items-center">
+              <span class="mr-1.5 text-base">🌟</span>
+              <span>良かった点</span>
+            </div>
+            <ul class="space-y-2 text-xs sm:text-sm text-amber-950 pl-1">
+              <li class="flex items-start"><span class="mr-1.5 text-amber-600 font-bold">•</span><span>${point1}</span></li>
+              <li class="flex items-start"><span class="mr-1.5 text-amber-600 font-bold">•</span><span>${point2}</span></li>
+              <li class="flex items-start"><span class="mr-1.5 text-amber-600 font-bold">•</span><span>${point3}</span></li>
+            </ul>
+          </div>
+
+          <!-- 🔍 思考を深めるための問いかけ -->
+          <div class="bg-blue-50/80 border border-blue-200/80 rounded-xl p-4 space-y-3">
+            <div class="font-bold text-blue-900 text-xs sm:text-sm flex items-center">
+              <span class="mr-1.5 text-base">🔍</span>
+              <span>思考を深めるための問いかけ（志望校の求められる像・特色を踏まえて）</span>
+            </div>
+            <p class="text-xs text-blue-900/90 leading-relaxed">
+              ${fullTargetName}のアドミッション・ポリシーや特色を踏まえて、以下の点をご自身でさらに深掘りしてみてください。
+            </p>
+            <div class="space-y-2.5 text-xs sm:text-sm pl-1">
+              <div class="bg-white/90 p-3 rounded-lg border border-blue-100 space-y-1">
+                <p class="font-bold text-blue-950">${question1Title}</p>
+                <p class="text-slate-700 leading-relaxed">${question1Body}</p>
+              </div>
+              <div class="bg-white/90 p-3 rounded-lg border border-blue-100 space-y-1">
+                <p class="font-bold text-blue-950">${question2Title}</p>
+                <p class="text-slate-700 leading-relaxed">${question2Body}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ⏱️ 秒数調整アドバイス -->
+          <div class="bg-purple-50/80 border border-purple-200/80 rounded-xl p-4 space-y-2.5">
+            <div class="font-bold text-purple-900 text-xs sm:text-sm flex items-center">
+              <span class="mr-1.5 text-base">⏱️</span>
+              <span>秒数調整アドバイス（目標: 60秒）</span>
+            </div>
+            <p class="font-bold text-purple-950 text-xs sm:text-sm">${timingAdviceTitle}</p>
+            <div class="space-y-1.5 text-xs sm:text-sm pl-1 text-slate-700">
+              <p><strong class="text-purple-900">足すべき要素のヒント:</strong> ${addHint}</p>
+              <p><strong class="text-purple-900">削るべき要素のヒント:</strong> ${cutHint}</p>
+            </div>
+          </div>
+
+          <!-- Encouragement Closing Message -->
+          <div class="bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-xl p-3.5 text-center font-bold text-xs sm:text-sm shadow-sm">
+            この調子で、あなた自身の「体験」や「想い」を少しずつ言葉に付け上げてみてください。応援しています！💪✨
+          </div>
+        </div>
+      `;
+
+      document.getElementById("aiAdviceOutput").innerHTML = html;
+    }
+
+    function switchTab(tabNum) {
+      [1, 2, 3].forEach(n => {
+        const btn = document.getElementById(`tabBtn${n}`);
+        const content = document.getElementById(`stepContent${n}`);
+        if (n === tabNum) {
+          btn.className = "py-2.5 px-3 border-b-2 border-brand-600 text-brand-600 flex items-center space-x-2 shrink-0 font-bold";
+          content.classList.remove("hidden");
+        } else {
+          btn.className = "py-2.5 px-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-2 shrink-0 font-semibold";
+          content.classList.add("hidden");
+        }
+      });
+    }
+
+    function handleStatusChange() {
+      const q = questionsList[currentIndex];
+      const val = document.getElementById("qStatusSelect").value;
+      statuses[q.id] = val;
+      renderQList();
+      updateOverallProgress();
+      saveData();
+    }
+
+    function nextQ() {
+      if (currentIndex < questionsList.length - 1) {
+        selectQuestion(currentIndex + 1);
+      } else {
+        showToast("最後の質問です", "info");
+      }
+    }
+
+    function prevQ() {
+      if (currentIndex > 0) {
+        selectQuestion(currentIndex - 1);
+      }
+    }
+
+    function updateOverallProgress() {
+      let completedCount = 0;
+      questionsList.forEach(q => {
+        const text = answers[q.id] || "";
+        const status = statuses[q.id] || (text ? "作成中" : "未着手");
+        if (status === "完成") completedCount++;
+      });
+      document.getElementById("overallProgressText").innerText = `${completedCount} / ${questionsList.length} 完了`;
+    }
+
+    function toggleSpeech() {
+      if (isSpeaking) {
+        stopSpeech();
+        return;
+      }
+
+      const text = document.getElementById("answerInput").value.trim();
+      if (!text) {
+        showToast("読み上げる回答本文がありません", "warning");
+        return;
+      }
+
+      if (!('speechSynthesis' in window)) {
+        showToast("お使いのブラウザは音声読み上げに対応していません", "warning");
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ja-JP';
+      utterance.rate = 1.0;
+
+      utterance.onend = function() {
+        isSpeaking = false;
+        updateSpeechUI(false);
+      };
+
+      utterance.onerror = function() {
+        isSpeaking = false;
+        updateSpeechUI(false);
+      };
+
+      synth.speak(utterance);
+      isSpeaking = true;
+      updateSpeechUI(true);
+    }
+
+    function stopSpeech() {
+      if (synth && synth.speaking) {
+        synth.cancel();
+      }
+      isSpeaking = false;
+      updateSpeechUI(false);
+    }
+
+    function updateSpeechUI(playing) {
+      const icon = document.getElementById("ttsPlayIcon");
+      const text = document.getElementById("ttsPlayText");
+      if (playing) {
+        icon.className = "fa-solid fa-pause";
+        text.innerText = "一時停止";
+      } else {
+        icon.className = "fa-solid fa-play";
+        text.innerText = "音声再生";
+      }
+    }
+
+    function toggleTimer() {
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        document.getElementById("timerStartBtn").innerText = "再開";
+      } else {
+        timerStartTime = Date.now() - timerElapsedTime;
+        timerInterval = setInterval(updateTimerDisplay, 100);
+        isTimerRunning = true;
+        document.getElementById("timerStartBtn").innerText = "ストップ";
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      timerElapsedTime = 0;
+      document.getElementById("stopwatchDisplay").innerText = "00:00.0";
+      document.getElementById("timerStartBtn").innerText = "計測スタート";
+    }
+
+    function updateTimerDisplay() {
+      timerElapsedTime = Date.now() - timerStartTime;
+      const totalDeciSeconds = Math.floor(timerElapsedTime / 100);
+      const deciSeconds = totalDeciSeconds % 10;
+      const totalSeconds = Math.floor(totalDeciSeconds / 10);
+      const seconds = totalSeconds % 60;
+      const minutes = Math.floor(totalSeconds / 60);
+
+      const mStr = String(minutes).padStart(2, '0');
+      const sStr = String(seconds).padStart(2, '0');
+      document.getElementById("stopwatchDisplay").innerText = `${mStr}:${sStr}.${deciSeconds}`;
+    }
+
+    function saveData() {
+      const payload = {
+        targetSchool: document.getElementById("targetSchool").value,
+        targetDept: document.getElementById("targetDept").value,
+        answers: answers,
+        statuses: statuses,
+        customQuestions: questionsList
+      };
+      localStorage.setItem("interview_app_data_v2", JSON.stringify(payload));
+    }
+
+    function loadData() {
+      const raw = localStorage.getItem("interview_app_data_v2") || localStorage.getItem("interview_app_data");
+      if (!raw) {
+        questionsList = JSON.parse(JSON.stringify(defaultQuestionsList));
+        return;
+      }
+      try {
+        const data = JSON.parse(raw);
+        document.getElementById("targetSchool").value = data.targetSchool || "";
+        document.getElementById("targetDept").value = data.targetDept || "";
+        answers = data.answers || {};
+        statuses = data.statuses || {};
+        
+        if (data.customQuestions && Array.isArray(data.customQuestions) && data.customQuestions.length > 0) {
+          questionsList = data.customQuestions;
+        } else {
+          questionsList = JSON.parse(JSON.stringify(defaultQuestionsList));
+        }
+      } catch (e) {
+        console.error("Failed to load saved data:", e);
+        questionsList = JSON.parse(JSON.stringify(defaultQuestionsList));
+      }
+    }
+
+    function openSummaryModal() {
+      const school = document.getElementById("targetSchool").value.trim() || "未入力";
+      const dept = document.getElementById("targetDept").value.trim() || "未入力";
+
+      document.getElementById("modalTargetSchool").innerText = school;
+      document.getElementById("modalTargetDept").innerText = dept;
+
+      const modalContainer = document.getElementById("modalAnswersList");
+      modalContainer.innerHTML = "";
+
+      questionsList.forEach((q, idx) => {
+        const ans = answers[q.id] || "（未入力）";
+        const st = statuses[q.id] || "未着手";
+
+        const item = document.createElement("div");
+        item.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2";
+        item.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-brand-700 text-xs">Q${idx + 1}. ${q.category}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-600">${st}</span>
+          </div>
+          <h4 class="font-bold text-slate-900 text-sm">${q.title}</h4>
+          <p class="text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap bg-white p-3 rounded-lg border border-slate-200/80">${ans}</p>
+        `;
+        modalContainer.appendChild(item);
+      });
+
+      document.getElementById("summaryModal").classList.remove("hidden");
+    }
+
+    function closeSummaryModal() {
+      document.getElementById("summaryModal").classList.add("hidden");
+    }
+
+    function copyAllText() {
+      const school = document.getElementById("targetSchool").value || "未入力";
+      const dept = document.getElementById("targetDept").value || "未入力";
+      let text = `【面接対策・思考深掘りAI】\n志望先: ${school}\n学部学科: ${dept}\n\n====================\n\n`;
+
+      questionsList.forEach((q, idx) => {
+        const ans = answers[q.id] || "（未入力）";
+        text += `Q${idx + 1}. ${q.title}\n回答:\n${ans}\n\n--------------------\n\n`;
+      });
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast("全回答をクリップボードにコピーしました！", "success");
+        }).catch(() => fallbackCopyText(text));
+      } else {
+        fallbackCopyText(text);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast("全回答をクリップボードにコピーしました！", "success");
+      } catch (err) {
+        showToast("コピーに失敗しました", "warning");
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+
+      let bg = "bg-slate-800 text-white";
+      let icon = "fa-circle-info";
+
+      if (type === "success") { bg = "bg-emerald-600 text-white"; icon = "fa-circle-check"; }
+      else if (type === "warning") { bg = "bg-amber-600 text-white"; icon = "fa-triangle-exclamation"; }
+
+      toast.className = `px-4 py-2.5 rounded-xl shadow-lg ${bg} text-xs font-bold flex items-center space-x-2 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+      toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${message}</span>`;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove("translate-y-2", "opacity-0");
+      }, 50);
+
+      setTimeout(() => {
+        toast.classList.add("opacity-0", "translate-y-2");
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
